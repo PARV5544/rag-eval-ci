@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-and-dogfood:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install package & dev deps
+        run: pip install -e ".[dev]"
+      - name: Run PyTest
+        run: pytest --cov-fail-under=85
+      - name: Dogfood rag-eval-ci on sample dataset
+        run: rag-eval-ci run --dataset examples/sample_eval.jsonl --min-faithfulness 0.80 --max-hallucination-rate 0.10

@@ -1,0 +1,33 @@
+name: "RAG Eval CI Gate"
+description: "Fail CI builds when RAG faithfulness drops or hallucination rate exceeds thresholds."
+inputs:
+  dataset:
+    description: "Path to JSONL evaluation dataset"
+    required: true
+  min-faithfulness:
+    description: "Minimum average faithfulness score (0.0 - 1.0)"
+    required: false
+    default: "0.75"
+  max-hallucination-rate:
+    description: "Maximum allowed hallucination rate (0.0 - 1.0)"
+    required: false
+    default: "0.25"
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+    - name: Install rag-eval-ci
+      shell: bash
+      run: pip install "${{ github.action_path }}"
+    - name: Run RAG Eval Gate
+      shell: bash
+      run: |
+        rag-eval-ci run \
+          --dataset "${{ inputs.dataset }}" \
+          --min-faithfulness "${{ inputs.min-faithfulness }}" \
+          --max-hallucination-rate "${{ inputs.max-hallucination-rate }}" \
+          --markdown-out rag-eval-report.md
+        cat rag-eval-report.md >> "$GITHUB_STEP_SUMMARY"
